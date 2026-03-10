@@ -102,7 +102,7 @@ padding:6px;
 
 <input id="prezzo" placeholder="Prezzo Noleggio">
 
-<button onclick="createRental()">Crea Contratto</button>
+<button onclick="generateContract()">Genera Contratto PDF</button>
 
 </div>
 
@@ -290,8 +290,49 @@ ctx.clearRect(0,0,canvas.width,canvas.height)
 
 }
 
+  async function generateContract(){
+
+let carIndex=document.getElementById("carSelect").value
+let clientIndex=document.getElementById("clientSelect").value
+
+let data_inizio=document.getElementById("data_inizio").value
+let data_fine=document.getElementById("data_fine").value
+let prezzo=document.getElementById("prezzo").value
+
+let car=cars[carIndex]
+let client=clients[clientIndex]
+
+const { jsPDF } = window.jspdf
+
+let doc=new jsPDF()
+
+doc.setFontSize(12)
+
+doc.text("CONTRATTO DI NOLEGGIO",20,20)
+
+doc.text("Cliente: "+client.nome,20,40)
+
+doc.text("Auto: "+car.marca+" "+car.modello,20,50)
+doc.text("Targa: "+car.targa,20,60)
+
+doc.text("Data inizio: "+data_inizio,20,80)
+doc.text("Data fine: "+data_fine,20,90)
+
+doc.text("Prezzo noleggio: €"+prezzo,20,110)
+
+doc.text("Penale ritardo: €"+car.penale+" al giorno",20,130)
+doc.text("Costo km extra: €"+car.kmextra+" /km",20,140)
+
+doc.text("Deposito cauzione: €"+car.deposito,20,150)
+
+doc.save("contratto-noleggio.pdf")
+
+}
+
 </script>
 
 </body>
 
 </html>
+
+
