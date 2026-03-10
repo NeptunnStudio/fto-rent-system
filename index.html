@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>FTO RENT SYSTEM</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#111;
+color:white;
+padding:40px;
+}
+
+input,select,button{
+padding:10px;
+margin:5px;
+}
+
+button{
+background:#e63946;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+.card{
+background:#222;
+padding:20px;
+margin:20px 0;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>FTO RENT - Sistema Noleggi</h1>
+
+<div class="card">
+
+<h2>Aggiungi Auto</h2>
+
+<input id="marca" placeholder="Marca">
+<input id="modello" placeholder="Modello">
+<input id="targa" placeholder="Targa">
+
+<button onclick="addCar()">Salva Auto</button>
+
+</div>
+
+<div class="card">
+
+<h2>Aggiungi Cliente</h2>
+
+<input id="cliente_nome" placeholder="Nome cliente">
+
+<button onclick="addClient()">Salva Cliente</button>
+
+</div>
+
+<div class="card">
+
+<h2>Nuovo Noleggio</h2>
+
+<select id="carSelect"></select>
+<select id="clientSelect"></select>
+
+<input id="data_inizio" type="date">
+<input id="data_fine" type="date">
+
+<button onclick="addRental()">Salva Noleggio</button>
+
+</div>
+
+<div class="card">
+
+<h2>Valuta Cliente</h2>
+
+<select id="rateClient"></select>
+
+<select id="rating">
+<option value="5">Ottimo</option>
+<option value="4">Buono</option>
+<option value="3">Normale</option>
+<option value="2">Problemi</option>
+<option value="1">NON noleggiare</option>
+</select>
+
+<button onclick="rateClient()">Salva voto</button>
+
+</div>
+
+<script>
+
+let cars=JSON.parse(localStorage.getItem("cars"))||[]
+let clients=JSON.parse(localStorage.getItem("clients"))||[]
+let rentals=JSON.parse(localStorage.getItem("rentals"))||[]
+
+function save(){
+
+localStorage.setItem("cars",JSON.stringify(cars))
+localStorage.setItem("clients",JSON.stringify(clients))
+localStorage.setItem("rentals",JSON.stringify(rentals))
+
+}
+
+function refresh(){
+
+let carSelect=document.getElementById("carSelect")
+let clientSelect=document.getElementById("clientSelect")
+let rateSelect=document.getElementById("rateClient")
+
+carSelect.innerHTML=""
+clientSelect.innerHTML=""
+rateSelect.innerHTML=""
+
+cars.forEach((c,i)=>{
+
+carSelect.innerHTML+=`<option value="${i}">${c.marca} ${c.modello}</option>`
+
+})
+
+clients.forEach((c,i)=>{
+
+clientSelect.innerHTML+=`<option value="${i}">${c.nome}</option>`
+rateSelect.innerHTML+=`<option value="${i}">${c.nome}</option>`
+
+})
+
+}
+
+function addCar(){
+
+let marca=document.getElementById("marca").value
+let modello=document.getElementById("modello").value
+let targa=document.getElementById("targa").value
+
+cars.push({marca,modello,targa})
+
+save()
+refresh()
+
+}
+
+function addClient(){
+
+let nome=document.getElementById("cliente_nome").value
+
+clients.push({nome,rating:0})
+
+save()
+refresh()
+
+}
+
+function addRental(){
+
+let car=document.getElementById("carSelect").value
+let client=document.getElementById("clientSelect").value
+let inizio=document.getElementById("data_inizio").value
+let fine=document.getElementById("data_fine").value
+
+rentals.push({car,client,inizio,fine})
+
+save()
+
+alert("Noleggio salvato")
+
+}
+
+function rateClient(){
+
+let id=document.getElementById("rateClient").value
+let rating=document.getElementById("rating").value
+
+clients[id].rating=rating
+
+save()
+
+alert("Valutazione salvata")
+
+}
+
+refresh()
+
+</script>
+
+</body>
+
+</html>
