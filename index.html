@@ -9,28 +9,46 @@
 
 body{
 font-family:Arial;
-background:#111;
+background:#0f172a;
 color:white;
 padding:40px;
 }
 
-input,select,button{
-padding:10px;
+h1{
+color:#38bdf8;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:20px 0;
+border-radius:10px;
+}
+
+input,select{
+padding:8px;
 margin:5px;
 }
 
 button{
-background:#e63946;
+background:#38bdf8;
 border:none;
-color:white;
+padding:10px;
+color:black;
 cursor:pointer;
 }
 
-.card{
-background:#222;
-padding:20px;
-margin:20px 0;
-border-radius:10px;
+canvas{
+background:white;
+}
+
+table{
+width:100%;
+margin-top:10px;
+}
+
+td{
+padding:6px;
 }
 
 </style>
@@ -39,29 +57,38 @@ border-radius:10px;
 
 <body>
 
-<h1>FTO RENT - Sistema Noleggi</h1>
+<h1>FTO RENT MANAGEMENT</h1>
+
+<!-- DATABASE AUTO -->
 
 <div class="card">
 
-<h2>Aggiungi Auto</h2>
+<h2>Database Auto</h2>
 
 <input id="marca" placeholder="Marca">
 <input id="modello" placeholder="Modello">
 <input id="targa" placeholder="Targa">
+<input id="kmextra" placeholder="Costo km extra">
+<input id="penale" placeholder="Penale ritardo">
+<input id="deposito" placeholder="Deposito cauzione">
 
 <button onclick="addCar()">Salva Auto</button>
 
 </div>
 
+<!-- CLIENTI -->
+
 <div class="card">
 
-<h2>Aggiungi Cliente</h2>
+<h2>Clienti</h2>
 
-<input id="cliente_nome" placeholder="Nome cliente">
+<input id="cliente_nome" placeholder="Nome Cliente">
 
 <button onclick="addClient()">Salva Cliente</button>
 
 </div>
+
+<!-- NOLEGGIO -->
 
 <div class="card">
 
@@ -73,25 +100,43 @@ border-radius:10px;
 <input id="data_inizio" type="date">
 <input id="data_fine" type="date">
 
-<button onclick="addRental()">Salva Noleggio</button>
+<input id="prezzo" placeholder="Prezzo Noleggio">
+
+<button onclick="createRental()">Crea Contratto</button>
 
 </div>
 
+<!-- FIRMA -->
+
 <div class="card">
 
-<h2>Valuta Cliente</h2>
+<h2>Firma Digitale</h2>
 
-<select id="rateClient"></select>
+<canvas id="firma" width="400" height="200"></canvas>
 
-<select id="rating">
-<option value="5">Ottimo</option>
-<option value="4">Buono</option>
-<option value="3">Normale</option>
-<option value="2">Problemi</option>
-<option value="1">NON noleggiare</option>
-</select>
+<br>
 
-<button onclick="rateClient()">Salva voto</button>
+<button onclick="clearSignature()">Cancella</button>
+
+</div>
+
+<!-- STORICO -->
+
+<div class="card">
+
+<h2>Storico Noleggi</h2>
+
+<table id="rentalsTable"></table>
+
+</div>
+
+<!-- DASHBOARD -->
+
+<div class="card">
+
+<h2>Dashboard Guadagni</h2>
+
+<p id="totale"></p>
 
 </div>
 
@@ -113,11 +158,9 @@ function refresh(){
 
 let carSelect=document.getElementById("carSelect")
 let clientSelect=document.getElementById("clientSelect")
-let rateSelect=document.getElementById("rateClient")
 
 carSelect.innerHTML=""
 clientSelect.innerHTML=""
-rateSelect.innerHTML=""
 
 cars.forEach((c,i)=>{
 
@@ -128,9 +171,10 @@ carSelect.innerHTML+=`<option value="${i}">${c.marca} ${c.modello}</option>`
 clients.forEach((c,i)=>{
 
 clientSelect.innerHTML+=`<option value="${i}">${c.nome}</option>`
-rateSelect.innerHTML+=`<option value="${i}">${c.nome}</option>`
 
 })
+
+updateRentals()
 
 }
 
@@ -139,8 +183,11 @@ function addCar(){
 let marca=document.getElementById("marca").value
 let modello=document.getElementById("modello").value
 let targa=document.getElementById("targa").value
+let kmextra=document.getElementById("kmextra").value
+let penale=document.getElementById("penale").value
+let deposito=document.getElementById("deposito").value
 
-cars.push({marca,modello,targa})
+cars.push({marca,modello,targa,kmextra,penale,deposito})
 
 save()
 refresh()
@@ -158,35 +205,90 @@ refresh()
 
 }
 
-function addRental(){
+function createRental(){
 
 let car=document.getElementById("carSelect").value
 let client=document.getElementById("clientSelect").value
 let inizio=document.getElementById("data_inizio").value
 let fine=document.getElementById("data_fine").value
+let prezzo=document.getElementById("prezzo").value
 
-rentals.push({car,client,inizio,fine})
+rentals.push({car,client,inizio,fine,prezzo})
 
 save()
+refresh()
 
-alert("Noleggio salvato")
+alert("Contratto creato")
 
 }
 
-function rateClient(){
+function updateRentals(){
 
-let id=document.getElementById("rateClient").value
-let rating=document.getElementById("rating").value
+let table=document.getElementById("rentalsTable")
 
-clients[id].rating=rating
+table.innerHTML=""
 
-save()
+let totale=0
 
-alert("Valutazione salvata")
+rentals.forEach(r=>{
+
+let car=cars[r.car]
+let client=clients[r.client]
+
+totale+=Number(r.prezzo)
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${client.nome}</td>
+<td>${car.marca} ${car.modello}</td>
+<td>${r.inizio}</td>
+<td>${r.fine}</td>
+<td>€${r.prezzo}</td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("totale").innerText="Totale guadagni: € "+totale
 
 }
 
 refresh()
+
+/* FIRMA */
+
+let canvas=document.getElementById("firma")
+let ctx=canvas.getContext("2d")
+
+let drawing=false
+
+canvas.onmousedown=()=>drawing=true
+canvas.onmouseup=()=>drawing=false
+
+canvas.onmousemove=(e)=>{
+
+if(!drawing) return
+
+ctx.lineWidth=2
+ctx.lineCap="round"
+
+ctx.lineTo(e.offsetX,e.offsetY)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(e.offsetX,e.offsetY)
+
+}
+
+function clearSignature(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+}
 
 </script>
 
